@@ -3,9 +3,8 @@
 namespace Akasha
 {
     /// <summary>
-    /// Actor의 자식 GameObject에 존재하며,
-    /// 사운드, 이펙트, UI 요소 등을 담당하는 독립적인 로직 단위.
-    /// Reactive 흐름을 구독할 수 있으며, Actor의 표현 책임을 분산시킴.
+    /// 독립적으로 표현을 수행하는 단위입니다. Actor의 부담을 줄여줄 대체자역할을 합니다.
+    /// ReactiveField를 직접 구독하여 이펙트, 사운드 등을 제어합니다.
     /// </summary>
     public abstract class BaseIndicator : MonoBehaviour, IInteractLogicalSubscriber, IIndicator
     {
@@ -13,7 +12,7 @@ namespace Akasha
         [SerializeField] private GameObject? root;
 
         /// <summary>
-        /// Indicator의 비활성화 대상이 되는 루트 오브젝트
+        /// Indicator의 루트 GameObject
         /// </summary>
         public GameObject Root => root ??= gameObject;
 
@@ -44,7 +43,7 @@ namespace Akasha
         protected abstract void OnDeactivate();
 
         /// <summary>
-        /// 외부에서 호출 가능한 갱신 함수 (선택 구현).
+        /// 수동 Refresh 시 수행할 로직 (선택적)
         /// </summary>
         public virtual void Refresh() { }
     }
