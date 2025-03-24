@@ -39,6 +39,6 @@ public class CounterSpirit : BaseSpirit<CounterEntity>
 
     protected override void OnDeactivate()
     {
-        Debug.Log("<color=orange>[$1]</color> OnDeactivate");
+        Debug.Log("<color=orange>[Spirit]</color> OnDeactivate");
     }
 }

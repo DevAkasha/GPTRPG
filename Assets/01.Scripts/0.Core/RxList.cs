@@ -73,7 +73,7 @@ namespace Akasha
             OnChanged?.Invoke();
         }
 
-        public void ReactiveForeach(Func<T, T> action)
+        public void RxForeach(Func<T, T> action)
         {
             for (int i = 0; i < _list.Count; i++)
             {
