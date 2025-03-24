@@ -36,7 +36,7 @@ namespace Akasha
     /// <summary>
     /// Actor의 공통 베이스 클래스. Indicator 자동 등록, 갱신, 제어 기능을 포함한다.
     /// </summary>
-    public abstract class BaseActor : MonoBehaviour, IInteractLogicalSubscriber
+    public abstract class BaseActor : MonoBehaviour, IInteractLogicalSubscriber, IReactiveEventIssuer
     {
         private readonly List<IIndicator> _indicators = new();
 

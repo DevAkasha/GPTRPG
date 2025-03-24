@@ -129,6 +129,9 @@ namespace Akasha
 
             source.Subscribe(onChanged, owner, type, priority);
 
+            if (type != RxRelationType.ControlLogical)
+                onChanged(source.Value);
+            
             if (!_bindings.TryGetValue(owner, out var list))
             {
                 list = new List<IDisposable>();

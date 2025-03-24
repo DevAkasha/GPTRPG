@@ -128,9 +128,11 @@ namespace Akasha
         private T _value;
         private readonly Func<T> _expression;
         private readonly Dictionary<IReactiveReader, Action> _subscriptions = new();
-        private static readonly HashSet<ReactiveExpression<T>> _evaluationStack = new();
-        private event Action<T> _onChanged;
         private readonly Dictionary<Action, Action<T>> _rawDelegateMap = new();
+        private readonly List<LogicalSubscriber> _interactSubscribers = new();
+        private static readonly HashSet<ReactiveExpression<T>> _evaluationStack = new();
+
+        private event Action<T> _onChanged;
 
         public ReactiveExpression(Func<T> expression, params IReactiveReader[] sources)
         {
@@ -145,54 +147,56 @@ namespace Akasha
 
             Recalculate();
         }
+
         public T Value => _value;
 
         public void Subscribe(Action<T> callback, object subscriber, RxRelationType type, int priority = 0)
         {
-            if (type != RxRelationType.Functional)
-                throw new InvalidOperationException("ReactiveExpression은 기능적 관계로만 구독 가능합니다.");
-            if (subscriber is not IFunctionalSubscriber)
-                throw new InvalidOperationException("ReactiveExpression은 Entity , Part, Screen, View만 구독할 수 있습니다.");
+            if (subscriber == null)
+                throw new ArgumentNullException(nameof(subscriber));
 
-            _onChanged += callback;
+            switch (type)
+            {
+                case RxRelationType.Functional:
+                    if (subscriber is not IFunctionalSubscriber)
+                        throw new InvalidOperationException("ReactiveExpression은 Functional 구독자는 IFunctionalSubscriber만 허용합니다.");
+                    _onChanged += callback;
+                    break;
+
+                case RxRelationType.InteractLogical:
+                    if (subscriber is not IInteractLogicalSubscriber)
+                        throw new InvalidOperationException("ReactiveExpression은 InteractLogical 구독자는 IInteractLogicalSubscriber만 허용합니다.");
+                    InsertInteractSubscriber(callback, priority);
+                    break;
+
+                default:
+                    throw new InvalidOperationException("ReactiveExpression은 Functional 또는 InteractLogical로만 구독할 수 있습니다.");
+            }
         }
 
         public void Unsubscribe(Action<T> callback)
         {
             _onChanged -= callback;
+            _interactSubscribers.RemoveAll(sub => sub.Callback == callback);
         }
 
         public void UnsubscribeAll()
         {
             _onChanged = null;
+            _interactSubscribers.Clear();
         }
 
         public void Dispose()
         {
             foreach (var (source, handler) in _subscriptions)
                 source.UnsubscribeRaw(handler);
-     
+
             _subscriptions.Clear();
             _rawDelegateMap.Clear();
             UnsubscribeAll();
         }
-        private void Recalculate()
-        {
-            if (_evaluationStack.Contains(this))
-                throw new InvalidOperationException("ReactiveExpression 내부에서 순환 참조(Backbiting)가 감지되었습니다. 계산식 또는 소스 구조를 점검해주세요.");
 
-            _evaluationStack.Add(this);
-            var newValue = _expression();
-
-            if (!EqualityComparer<T>.Default.Equals(_value, newValue))
-            {
-                _value = newValue;
-                _onChanged?.Invoke(_value);
-            }
-
-            _evaluationStack.Remove(this);
-        }
-        void IReactiveReader.SubscribeRaw(Action onChanged, object subscriber, RxRelationType type)
+        public void SubscribeRaw(Action onChanged, object subscriber, RxRelationType type)
         {
             if (_rawDelegateMap.ContainsKey(onChanged)) return;
 
@@ -201,7 +205,7 @@ namespace Akasha
             Subscribe(wrapper, subscriber, type);
         }
 
-        void IReactiveReader.UnsubscribeRaw(Action onChanged)
+        public void UnsubscribeRaw(Action onChanged)
         {
             if (_rawDelegateMap.TryGetValue(onChanged, out var wrapper))
             {
@@ -210,6 +214,50 @@ namespace Akasha
             }
         }
 
+        private void Recalculate()
+        {
+            if (_evaluationStack.Contains(this))
+                throw new InvalidOperationException("ReactiveExpression 내부에서 순환 참조가 감지되었습니다.");
+
+            _evaluationStack.Add(this);
+            var newValue = _expression();
+
+            if (!EqualityComparer<T>.Default.Equals(_value, newValue))
+            {
+                _value = newValue;
+                _onChanged?.Invoke(_value);
+
+                foreach (var sub in _interactSubscribers)
+                    ReactiveScheduler.EnqueueLogical(() => sub.Callback(_value), sub.Priority);
+            }
+
+            _evaluationStack.Remove(this);
+        }
+
+        private void InsertInteractSubscriber(Action<T> callback, int priority)
+        {
+            var sub = new LogicalSubscriber(callback, priority);
+            int index = _interactSubscribers.BinarySearch(sub, LogicalSubscriberComparer.Instance);
+            if (index < 0) index = ~index;
+            _interactSubscribers.Insert(index, sub);
+        }
+
+        private readonly struct LogicalSubscriber
+        {
+            public readonly Action<T> Callback;
+            public readonly int Priority;
+            public LogicalSubscriber(Action<T> callback, int priority)
+            {
+                Callback = callback;
+                Priority = priority;
+            }
+        }
+
+        private class LogicalSubscriberComparer : IComparer<LogicalSubscriber>
+        {
+            public static readonly LogicalSubscriberComparer Instance = new();
+            public int Compare(LogicalSubscriber x, LogicalSubscriber y) => x.Priority.CompareTo(y.Priority);
+        }
     }
     public class ReactiveCommand
     {
@@ -218,8 +266,8 @@ namespace Akasha
 
         public void Subscribe(Action callback, object subscriber, int priority = 0)
         {
-            if (subscriber is not IControlLogicalSubscriber)
-                throw new InvalidOperationException("ReactiveCommand는 IControlLogicalSubscriber만 구독할 수 있습니다.");
+            if (subscriber is not IControlLogicalSubscriber && subscriber is not IInteractLogicalSubscriber)
+                throw new InvalidOperationException("ReactiveCommand는 IControlLogicalSubscriber이거나 IInteractLogicalSubscriber만 구독할 수 있습니다.");
 
             _subscribers.Add((callback, priority));
         }
@@ -264,8 +312,8 @@ namespace Akasha
 
         public void Raise(object issuer)
         {
-            if (issuer is not IGameEventManager)
-                throw new InvalidOperationException("GameEvent는 Manager에서만 Raise할 수 있습니다.");
+            if (issuer is not IControlLogicalSubscriber)
+                throw new InvalidOperationException("GameEvent는 IControlLogicalSubscriber만 Raise할 수 있습니다.");
 
             if (_isRaising) return;
             _isRaising = true;
