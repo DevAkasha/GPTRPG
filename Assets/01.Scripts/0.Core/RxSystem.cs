@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Akasha
 {
-    public enum RxRelationType
+    public enum RxType
     {
         Functional,         // 상태 계산 목적 → Entity, Part, Screen
         InteractLogical,    // 상향식 반응 목적 → Actor, Presenter, Indicator
@@ -14,14 +14,14 @@ namespace Akasha
 
     public interface IReactiveReader
     {
-        void SubscribeRaw(Action onChanged, object subscriber, RxRelationType type);
+        void SubscribeRaw(Action onChanged, object subscriber, RxType type);
         void UnsubscribeRaw(Action onChanged);
     }
 
     public interface IReactiveReader<T> : IReactiveReader
     {
         T Value { get; }
-        void Subscribe(Action<T> callback, object subscriber, RxRelationType type, int priority = 0);
+        void Subscribe(Action<T> callback, object subscriber, RxType type, int priority = 0);
         void Unsubscribe(Action<T> callback);
     }
 
@@ -29,22 +29,21 @@ namespace Akasha
     {
         T Value { set; }
     }
-    public interface IReactiveEventIssuer { }
+    
     public interface IReactiveValue<T> : IReactiveReader<T>, IReactiveWriter<T> { }
 
-    public interface IGameEventManager { }
-  
-    public interface IBindableMono { }
     public interface IIndicator 
     { 
         void Refresh(); 
     }
 
+    public interface IGameEventManager { }
+    public interface IReactiveEventIssuer { }
     public interface IControlLogicalSubscriber { }
     public interface IInteractLogicalSubscriber { }
     public interface IFunctionalSubscriber { }
 
-    public static class ReactiveContext
+    public static class RxFlow
     {
         public static bool IsPaused { get; private set; } = false;
 
@@ -52,7 +51,7 @@ namespace Akasha
         public static void Resume() => IsPaused = false;
     }
 
-    public static class ReactiveLogger
+    public static class RxLogger
     {
         private static readonly List<string> _logs = new();
 
@@ -77,15 +76,15 @@ namespace Akasha
         }
     }
 
-    public static class ReactiveScheduler
+    public static class RxQueue
     {
         private static readonly SortedDictionary<int, Queue<Action>> logicalQueue = new();
 
         public static void EnqueueLogical(Action action, int priority)
         {
-            if (ReactiveContext.IsPaused)
+            if (RxFlow.IsPaused)
             {
-                ReactiveLogger.Log($"[Scheduler] Skipped due to pause. Priority: {priority}");
+                RxLogger.Log($"[Scheduler] Skipped due to pause. Priority: {priority}");
                 return;
             }
 
@@ -95,14 +94,14 @@ namespace Akasha
                 logicalQueue[priority] = queue;
             }
             queue.Enqueue(action);
-            ReactiveLogger.Log($"[Scheduler] Enqueued action at priority {priority}");
+            RxLogger.Log($"[Scheduler] Enqueued action at priority {priority}");
         }
 
         public static void Flush()
         {      
-            if (ReactiveContext.IsPaused)
+            if (RxFlow.IsPaused)
             {
-                ReactiveLogger.Log("[Scheduler] Flush skipped due to pause.");
+                RxLogger.Log("[Scheduler] Flush skipped due to pause.");
                 return;
             }
 
@@ -111,25 +110,25 @@ namespace Akasha
                 while (queue.Count > 0)
                 {
                     var action = queue.Dequeue();
-                    ReactiveLogger.Log($"[Scheduler] Executing action at priority {priority}");
+                    RxLogger.Log($"[Scheduler] Executing action at priority {priority}");
                     action.Invoke();
                 }
             }
             logicalQueue.Clear();
-            ReactiveLogger.Log("[Scheduler] Flush complete.");
+            RxLogger.Log("[Scheduler] Flush complete.");
         }
     }
-    public static class ReactiveBinder
+    public static class RxBind
     {
         private static readonly Dictionary<object, List<IDisposable>> _bindings = new();
 
-        public static void Bind<T>(IReactiveReader<T> source, Action<T> onChanged, object owner, RxRelationType type = RxRelationType.InteractLogical, int priority = 0)
+        public static void Bind<T>(IReactiveReader<T> source, Action<T> onChanged, object owner, RxType type = RxType.InteractLogical, int priority = 0)
         {
             ValidateSubscriber(owner, type);
 
             source.Subscribe(onChanged, owner, type, priority);
 
-            if (type != RxRelationType.ControlLogical)
+            if (type != RxType.ControlLogical)
                 onChanged(source.Value);
             
             if (!_bindings.TryGetValue(owner, out var list))
@@ -152,19 +151,19 @@ namespace Akasha
             }
         }
 
-        private static void ValidateSubscriber(object subscriber, RxRelationType type)
+        private static void ValidateSubscriber(object subscriber, RxType type)
         {
             switch (type)
             {
-                case RxRelationType.Functional:
+                case RxType.Functional:
                     if (subscriber is not IFunctionalSubscriber)
                         throw new InvalidOperationException("Functional 구독자는 IFunctionalSubscriber를 구현해야 합니다.");
                     break;
-                case RxRelationType.InteractLogical:
+                case RxType.InteractLogical:
                     if (subscriber is not IInteractLogicalSubscriber)
                         throw new InvalidOperationException("InteractLogical 구독자는 IInteractLogicalSubscriber를 구현해야 합니다.");
                     break;
-                case RxRelationType.ControlLogical:
+                case RxType.ControlLogical:
                     if (subscriber is not IControlLogicalSubscriber)
                         throw new InvalidOperationException("ControlLogical 구독자는 IControlLogicalSubscriber를 구현해야 합니다.");
                     break;

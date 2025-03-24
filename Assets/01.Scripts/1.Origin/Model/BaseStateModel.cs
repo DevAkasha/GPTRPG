@@ -11,7 +11,7 @@ namespace Akasha
     /// </summary>
     public abstract class ReactiveStateModel
     {
-        private readonly ReactiveCommand command = new();
+        private readonly RxEvent command = new();
 
         public void Raise(object issuer) => command.Raise(issuer);
         public void Subscribe(Action callback, object subscriber, int priority = 0)

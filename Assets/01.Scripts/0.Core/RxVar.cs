@@ -4,14 +4,14 @@ using System.Linq;
 
 namespace Akasha
 {
-    public class ReactiveProperty<T> : IReactiveValue<T>
+    public class RxVar<T> : IReactiveValue<T>
     {
         private T _value;
         private event Action<T> _onFunctionalChanged;
         private readonly List<LogicalSubscriber> _logicalSubscribers = new();
         private readonly Dictionary<Action, Action<T>> _rawDelegateMap = new();
 
-        public ReactiveProperty(T initialValue)
+        public RxVar(T initialValue)
         {
             _value = initialValue;
         }
@@ -27,23 +27,23 @@ namespace Akasha
 
                 _onFunctionalChanged?.Invoke(_value);
                 foreach (var sub in _logicalSubscribers)
-                    ReactiveScheduler.EnqueueLogical(() => sub.Callback(_value), sub.Priority);
+                    RxQueue.EnqueueLogical(() => sub.Callback(_value), sub.Priority);
             }
         }
       
-        public void Subscribe(Action<T> callback, object subscriber, RxRelationType type, int priority = 0)
+        public void Subscribe(Action<T> callback, object subscriber, RxType type, int priority = 0)
         {
             if (subscriber == null) 
                 throw new ArgumentNullException(nameof(subscriber));
 
             switch (type)
             {
-                case RxRelationType.Functional:
+                case RxType.Functional:
                     ValidateFunctionalSubscriber(subscriber);
                     _onFunctionalChanged += callback;
                     break;
 
-                case RxRelationType.InteractLogical:
+                case RxType.InteractLogical:
                     ValidateInteractLogicalSubscriber(subscriber);
                     InsertLogicalSubscriberSorted(callback, priority);
                     break;
@@ -60,7 +60,7 @@ namespace Akasha
             _logicalSubscribers.RemoveAll(sub => sub.Callback == callback);
         }
 
-        void IReactiveReader.SubscribeRaw(Action onChanged, object subscriber, RxRelationType type)
+        void IReactiveReader.SubscribeRaw(Action onChanged, object subscriber, RxType type)
         {
             if (_rawDelegateMap.ContainsKey(onChanged)) return;
 
@@ -123,25 +123,25 @@ namespace Akasha
         }
     }
 
-    public class ReactiveExpression<T> : IReactiveReader<T>, IFunctionalSubscriber, IDisposable
+    public class RxExpr<T> : IReactiveReader<T>, IFunctionalSubscriber, IDisposable
     {
         private T _value;
         private readonly Func<T> _expression;
         private readonly Dictionary<IReactiveReader, Action> _subscriptions = new();
         private readonly Dictionary<Action, Action<T>> _rawDelegateMap = new();
         private readonly List<LogicalSubscriber> _interactSubscribers = new();
-        private static readonly HashSet<ReactiveExpression<T>> _evaluationStack = new();
+        private static readonly HashSet<RxExpr<T>> _evaluationStack = new();
 
         private event Action<T> _onChanged;
 
-        public ReactiveExpression(Func<T> expression, params IReactiveReader[] sources)
+        public RxExpr(Func<T> expression, params IReactiveReader[] sources)
         {
             _expression = expression ?? throw new ArgumentNullException(nameof(expression));
 
             foreach (var source in sources)
             {
                 Action handler = Recalculate;
-                source.SubscribeRaw(handler, this, RxRelationType.Functional);
+                source.SubscribeRaw(handler, this, RxType.Functional);
                 _subscriptions[source] = handler;
             }
 
@@ -150,20 +150,20 @@ namespace Akasha
 
         public T Value => _value;
 
-        public void Subscribe(Action<T> callback, object subscriber, RxRelationType type, int priority = 0)
+        public void Subscribe(Action<T> callback, object subscriber, RxType type, int priority = 0)
         {
             if (subscriber == null)
                 throw new ArgumentNullException(nameof(subscriber));
 
             switch (type)
             {
-                case RxRelationType.Functional:
+                case RxType.Functional:
                     if (subscriber is not IFunctionalSubscriber)
                         throw new InvalidOperationException("ReactiveExpression은 Functional 구독자는 IFunctionalSubscriber만 허용합니다.");
                     _onChanged += callback;
                     break;
 
-                case RxRelationType.InteractLogical:
+                case RxType.InteractLogical:
                     if (subscriber is not IInteractLogicalSubscriber)
                         throw new InvalidOperationException("ReactiveExpression은 InteractLogical 구독자는 IInteractLogicalSubscriber만 허용합니다.");
                     InsertInteractSubscriber(callback, priority);
@@ -196,7 +196,7 @@ namespace Akasha
             UnsubscribeAll();
         }
 
-        public void SubscribeRaw(Action onChanged, object subscriber, RxRelationType type)
+        public void SubscribeRaw(Action onChanged, object subscriber, RxType type)
         {
             if (_rawDelegateMap.ContainsKey(onChanged)) return;
 
@@ -228,7 +228,7 @@ namespace Akasha
                 _onChanged?.Invoke(_value);
 
                 foreach (var sub in _interactSubscribers)
-                    ReactiveScheduler.EnqueueLogical(() => sub.Callback(_value), sub.Priority);
+                    RxQueue.EnqueueLogical(() => sub.Callback(_value), sub.Priority);
             }
 
             _evaluationStack.Remove(this);
@@ -259,7 +259,8 @@ namespace Akasha
             public int Compare(LogicalSubscriber x, LogicalSubscriber y) => x.Priority.CompareTo(y.Priority);
         }
     }
-    public class ReactiveCommand
+
+    public class RxEvent
     {
         private bool _isRaising = false;
         private readonly List<(Action callback, int priority)> _subscribers = new();
@@ -287,7 +288,7 @@ namespace Akasha
 
             foreach (var (callback, priority) in _subscribers)
             {
-                ReactiveScheduler.EnqueueLogical(callback, priority);
+                RxQueue.EnqueueLogical(callback, priority);
             }
 
             _isRaising = false;
@@ -320,7 +321,7 @@ namespace Akasha
 
             foreach (var (callback, priority) in _subscribers)
             {
-                ReactiveScheduler.EnqueueLogical(callback, priority);
+                RxQueue.EnqueueLogical(callback, priority);
             }
 
             _isRaising = false;

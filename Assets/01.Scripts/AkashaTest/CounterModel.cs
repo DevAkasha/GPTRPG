@@ -9,6 +9,6 @@ using Akasha;
 public class CounterModel
 {
     // 카운트 상태를 저장하는 Reactive 변수입니다.
-    public ReactiveProperty<int> Count = new(0);
+    public RxVar<int> Count = new(0);
 }
 

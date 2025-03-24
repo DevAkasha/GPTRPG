@@ -4,12 +4,12 @@ using System.Collections.Generic;
 
 namespace Akasha
 {
-    public record ReactiveListChange<T>(ListChangeType ChangeType, int Index, T? Item);
+    public record RxListChange<T>(ListChangeType ChangeType, int Index, T? Item);
 
     [Serializable]
-    public class ReactiveList<T> : IList<T>
+    public class RxList<T> : IList<T>
     {
-        public event Action<ReactiveListChange<T>>? OnChangedDetailed;
+        public event Action<RxListChange<T>>? OnChangedDetailed;
         private readonly List<T> _list = new();
         public event Action OnChanged;
 
@@ -29,7 +29,7 @@ namespace Akasha
         public void Add(T item)
         {
             _list.Add(item);
-            OnChangedDetailed?.Invoke(new ReactiveListChange<T>(ListChangeType.Add, _list.Count - 1, item));
+            OnChangedDetailed?.Invoke(new RxListChange<T>(ListChangeType.Add, _list.Count - 1, item));
             OnChanged?.Invoke();
         }
 
@@ -40,7 +40,7 @@ namespace Akasha
             if (removed)
             {
                 OnChanged?.Invoke();
-                OnChangedDetailed?.Invoke(new ReactiveListChange<T>(ListChangeType.Remove, index, item));
+                OnChangedDetailed?.Invoke(new RxListChange<T>(ListChangeType.Remove, index, item));
             }
             return removed;
         }
@@ -48,7 +48,7 @@ namespace Akasha
         public void Clear()
         {
             _list.Clear();
-            OnChangedDetailed?.Invoke(new ReactiveListChange<T>(ListChangeType.Clear, -1, default));
+            OnChangedDetailed?.Invoke(new RxListChange<T>(ListChangeType.Clear, -1, default));
             OnChanged?.Invoke();
         }
 
@@ -61,7 +61,7 @@ namespace Akasha
         public void Insert(int index, T item)
         {
             _list.Insert(index, item);
-            OnChangedDetailed?.Invoke(new ReactiveListChange<T>(ListChangeType.Insert, index, item));
+            OnChangedDetailed?.Invoke(new RxListChange<T>(ListChangeType.Insert, index, item));
             OnChanged?.Invoke();
         }
 
@@ -69,7 +69,7 @@ namespace Akasha
         {
             var removedItem = _list[index];
             _list.RemoveAt(index);
-            OnChangedDetailed?.Invoke(new ReactiveListChange<T>(ListChangeType.Remove, index, removedItem));
+            OnChangedDetailed?.Invoke(new RxListChange<T>(ListChangeType.Remove, index, removedItem));
             OnChanged?.Invoke();
         }
 
@@ -79,7 +79,7 @@ namespace Akasha
             {
                 _list[i] = action(_list[i]);
             }
-            OnChangedDetailed?.Invoke(new ReactiveListChange<T>(ListChangeType.Replace, -1, default));
+            OnChangedDetailed?.Invoke(new RxListChange<T>(ListChangeType.Replace, -1, default));
             OnChanged?.Invoke();
         }
 

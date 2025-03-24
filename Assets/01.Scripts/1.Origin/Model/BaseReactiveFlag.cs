@@ -11,7 +11,7 @@ namespace Akasha
     /// </summary>
     public abstract class BaseReactiveFlag
     {
-        private readonly ReactiveCommand command = new();
+        private readonly RxEvent command = new();
 
         /// <summary>
         /// 이벤트 발생

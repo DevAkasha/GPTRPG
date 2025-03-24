@@ -7,7 +7,7 @@ using Akasha;
 public class CounterSpirit : BaseSpirit<CounterEntity>
 {
     // 버튼 클릭 시 발생하는 ReactiveCommand입니다.
-    public ReactiveCommand OnButtonClicked = new();
+    public RxEvent OnButtonClicked = new();
 
     protected override void OnSetup()
     {

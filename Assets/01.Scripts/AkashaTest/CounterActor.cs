@@ -27,7 +27,7 @@ public class CounterActor : BaseActor<CounterEntity>
         if (Entity?.Model is { } model)
         {
             // 상태 구독 + 현재 값 즉시 반영 (초기 View 갱신)
-            ReactiveBinder.Bind(model.Count, OnCountChanged, this);
+            RxBind.Bind(model.Count, OnCountChanged, this);
             Debug.Log($"<color=purple>[Actor]</color> 모델에 뷰갱신이 바인드됨! 초기값: {model.Count.Value}");
         }
     }
@@ -36,7 +36,7 @@ public class CounterActor : BaseActor<CounterEntity>
     {
         Debug.Log("<color=purple>[Actor]</color> OnDeactivate() 호출됨 → 모든 바인딩 해제");
         // 비활성화 시 모든 구독 해제
-        ReactiveBinder.UnbindAll(this);
+        RxBind.UnbindAll(this);
     }
 
     private void OnCountChanged(int value)

@@ -11,7 +11,7 @@ public class GameEventManager : Manager<GameEventManager>
     private void Update()
     {
         //프레임워크 아카샤 계산 호출 
-        ReactiveScheduler.Flush();
+        RxQueue.Flush();
     }
     protected override void OnActivate()
     {

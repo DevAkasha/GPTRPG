@@ -12,7 +12,7 @@ public class CounterPart : BasePart
         Debug.Log("<color=blue>[Part]</color> 파트에 모델이 바인드됨!");
         _model = model;
         // 상태 구독: 값이 변경될 때마다 OnCountChanged 호출
-        model.Count.Subscribe(OnCountChanged, this, RxRelationType.Functional);
+        model.Count.Subscribe(OnCountChanged, this, RxType.Functional);
     }
 
     private void OnCountChanged(int value)
