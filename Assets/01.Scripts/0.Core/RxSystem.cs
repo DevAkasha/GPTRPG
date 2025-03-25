@@ -121,12 +121,20 @@ namespace Akasha
     public static class RxBind
     {
         private static readonly Dictionary<object, List<IDisposable>> _bindings = new();
+        [ThreadStatic]
+        private static bool _isInRxBind;
+        internal static bool IsInRxBind => _isInRxBind;
+
+        private static void EnterBindContext() => _isInRxBind = true;
+        private static void ExitBindContext() => _isInRxBind = false;
 
         public static void Bind<T>(IReactiveReader<T> source, Action<T> onChanged, object owner, RxType type = RxType.InteractLogical, int priority = 0)
         {
             ValidateSubscriber(owner, type);
 
+            EnterBindContext();
             source.Subscribe(onChanged, owner, type, priority);
+            ExitBindContext();
 
             if (type != RxType.ControlLogical)
                 onChanged(source.Value);

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 namespace Akasha
 {
@@ -33,6 +34,11 @@ namespace Akasha
       
         public void Subscribe(Action<T> callback, object subscriber, RxType type, int priority = 0)
         {
+            if (!RxBind.IsInRxBind && subscriber is MonoBehaviour mono)
+            {
+                Debug.LogWarning($"[Rx] {mono.name}에서 Subscribe 직접 호출됨. RxBind 사용을 권장합니다.");
+            }
+
             if (subscriber == null) 
                 throw new ArgumentNullException(nameof(subscriber));
 
@@ -149,9 +155,15 @@ namespace Akasha
         }
 
         public T Value => _value;
+        public void Refresh() => Recalculate();
 
         public void Subscribe(Action<T> callback, object subscriber, RxType type, int priority = 0)
         {
+            if (!RxBind.IsInRxBind && subscriber is MonoBehaviour mono)
+            {
+                Debug.LogWarning($"[Rx] {mono.name}에서 Subscribe 직접 호출됨. RxBind 사용을 권장합니다.");
+            }
+
             if (subscriber == null)
                 throw new ArgumentNullException(nameof(subscriber));
 
