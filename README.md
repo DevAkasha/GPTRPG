@@ -15,6 +15,16 @@
 
 ---
 
+## 🛠️ 현재 구성된 기능 요약
+
+- 캐릭터 정보 (이름, 레벨, HP 등) RxVar 기반
+- 인벤토리 RxList<Item> 기반, 슬롯 동적생성
+- Slot 클릭 시 장착/해제 토글 **(나무검 장착시 공격 20 해제시 공격 10)**
+- StatWidget은 RxExpr 기반으로 자동 반영
+- GoldWidget / CharacterWidget은 RxBind 기반으로 상태 반영
+- ScrollView + GridLayoutGroup 구성 UI
+
+---
 ## 🤠 Akasha Framework 소개
 
 > Akasha는 명확한 구조 계층과 선언적 관계를 통해  
@@ -98,16 +108,7 @@ Assets/
 
 ---
 
-## 🛠️ 현재 구성된 기능 요약
 
-- 캐릭터 정보 (이름, 레벨, HP 등) RxVar 기반
-- 인벤토리 RxList<Item> 기반, 슬롯 120개 고정
-- Slot 클릭 시 장착/해제 토글
-- StatWidget은 RxExpr 기반으로 자동 반영
-- GoldWidget / CharacterWidget은 RxBind 기반으로 상태 반영
-- ScrollView + GridLayoutGroup 구성 UI
-
----
 ## 개발환경
 - **Unity** : 2022.3.17f
 - **IDE**  : Visual Studio 2022
