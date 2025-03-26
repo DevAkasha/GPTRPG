@@ -65,10 +65,4 @@ public class UIInventory : BaseScreen
             }
         }
     }
-
-    public override void Opened(params object[] param)
-    {
-        base.Opened(param);
-        Refresh(); // 패널 열릴 때 다시 갱신
-    }
 }

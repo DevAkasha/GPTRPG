@@ -53,14 +53,4 @@ public class UISlot : BaseWidget
             equippedMark.SetActive(item.IsEquipped.Value);
         }
     }
-
-    public override void Opened(params object[] param)
-    {
-        throw new System.NotImplementedException();
-    }
-
-    public override void HideDirect()
-    {
-        throw new System.NotImplementedException();
-    }
 }

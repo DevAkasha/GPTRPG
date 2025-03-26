@@ -28,15 +28,4 @@ public class StatWidget : BaseWidget
         healthText.text = $"health: {player.MaxHP.Value}";
         criticalText.text = $"critical: {player.TotalCritical.Value}";
     }
-
-    public override void HideDirect()
-    {
-        throw new System.NotImplementedException();
-    }
-
-    public override void Opened(params object[] param)
-    {
-        throw new System.NotImplementedException();
-    }
-
 }

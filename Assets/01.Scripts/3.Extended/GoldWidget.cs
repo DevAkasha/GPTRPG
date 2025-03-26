@@ -6,16 +6,6 @@ public class GoldWidget : BaseWidget
 {
     [SerializeField] private TextMeshProUGUI goldText;
 
-    public override void HideDirect()
-    {
-        throw new System.NotImplementedException();
-    }
-
-    public override void Opened(params object[] param)
-    {
-        throw new System.NotImplementedException();
-    }
-
     public override void Refresh()
     {
         var player = EGameManager.Instance.player;

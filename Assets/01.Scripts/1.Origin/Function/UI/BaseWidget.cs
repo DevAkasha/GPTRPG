@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using Akasha;
 using UnityEngine;
 
-public abstract class BaseWidget : BaseUI, IFunctionalSubscriber, IInteractLogicalSubscriber
+public abstract class BaseWidget : MonoBehaviour, IFunctionalSubscriber, IInteractLogicalSubscriber
 {
-    public virtual void Refresh() { }
-    protected virtual void OnSetup() { }
     protected virtual void Awake() { OnSetup(); }
+    public virtual void Refresh() { }
+    protected virtual void OnSetup() { }  
 }
