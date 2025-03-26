@@ -27,7 +27,7 @@
 |------|------|
 | `Entity`, `Part` | 상태 기반의 World 구성 |
 | `View`, `Screen` | 상태 표현 기반의 UI 구성 |
-| `Widget`, `Geer` | 상호작용 포함된 복합 기능 UI |
+| `Widget`, `Geer` | 상호작용 포함된 복합 기능 담당 |
 
 #### 2. 제어 계층
 | 분류 | 역할 |
@@ -105,7 +105,7 @@ Assets/
 - Slot 클릭 시 장착/해제 토글
 - StatWidget은 RxExpr 기반으로 자동 반영
 - GoldWidget / CharacterWidget은 RxBind 기반으로 상태 반영
-- ScrollView + GridLayoutGroup 구성으로 쾌적한 UI
+- ScrollView + GridLayoutGroup 구성 UI
 
 ---
 ## 개발환경
