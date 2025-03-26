@@ -10,6 +10,14 @@ namespace Akasha
         ControlLogical      // 하향식 제어 이벤트 수신 → Spirit, Manager
     }
 
+    public enum RxListChangeType
+    {
+        Add,
+        Remove,
+        Replace,
+        Clear
+    }
+
     public enum ListChangeType { Add, Remove, Insert, Replace, Clear }
 
     public interface IReactiveReader

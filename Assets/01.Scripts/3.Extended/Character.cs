@@ -29,40 +29,47 @@ public class Character : BaseEntity
 
     public Character()
     {
-        // ▣ RxExpr 초기화 (계산식 정의)
-        TotalAttack = CreateTotalStatExpr(BaseAttack, item => item.AttackBonus);
-        TotalDefence = CreateTotalStatExpr(BaseDefence, item => item.DefenceBonus);
-        TotalCritical = CreateTotalStatExpr(BaseCritical, item => item.CriticalBonus);
+        // ▣ RxExpr 계산식 - ToExpr 활용 : RxList 내부 요소에 대한 Expr 계산
+        TotalAttack = Inventory.ToExpr(
+            item => item.IsEquipped.Value,
+            item => item.AttackBonus,
+            BaseAttack,
+            (a, b) => a + b
+        );
 
-        // ▣ 인벤토리 변경 시 RxExpr 강제 리프레시
-        Inventory.OnChangedDetailed += _ =>
-        {
-            TotalAttack.Refresh();
-            TotalDefence.Refresh();
-            TotalCritical.Refresh();
-        };
-    }
-    private RxExpr<int> CreateTotalStatExpr(RxVar<int> baseValue, Func<Item, int> bonusSelector)
-    {
-        return new RxExpr<int>(() =>
-        {
-            int sum = baseValue.Value;
-            foreach (var item in Inventory)
-            {
-                if (item.IsEquipped.Value)
-                    sum += bonusSelector(item);
-            }
-            return sum;
-        });
+        TotalDefence = Inventory.ToExpr(
+            item => item.IsEquipped.Value,
+            item => item.DefenceBonus,
+            BaseDefence,
+            (a, b) => a + b
+        );
+
+        TotalCritical = Inventory.ToExpr(
+            item => item.IsEquipped.Value,
+            item => item.CriticalBonus,
+            BaseCritical,
+            (a, b) => a + b
+        );
+
+        // ▣ 장착 여부 변화 감지용 내부 구독 설정
+        Inventory.BindEach(item => item.IsEquipped)
+                 .OnChanged(() =>
+                 {
+                     TotalAttack.Refresh();
+                     TotalDefence.Refresh();
+                     TotalCritical.Refresh();
+                 }, this, RxType.Functional);
     }
 
     // ▣ 아이템 제어 메서드
     public void AddItem(Item item) => Inventory.Add(item);
+
     public void Equip(Item item)
     {
         if (Inventory.Contains(item))
             item.IsEquipped.Value = true;
     }
+
     public void UnEquip(Item item)
     {
         if (Inventory.Contains(item))
