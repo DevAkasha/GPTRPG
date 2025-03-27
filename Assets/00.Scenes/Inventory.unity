@@ -395,7 +395,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5618750e0afea154bab26773e7525798, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uiPosition: 0
   attackText: {fileID: 208732874}
   defenceText: {fileID: 47414672}
   healthText: {fileID: 526132036}
@@ -1171,7 +1170,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 10844169c1fe63f4f877dcb41231d44f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uiPosition: 0
   goldText: {fileID: 1190295353}
 --- !u!1 &520080468
 GameObject:
@@ -2777,11 +2775,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b80c7ec6e9aa54240978e8f5e88400d5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uiPosition: 0
-  root: {fileID: 0}
   slotParent: {fileID: 947180954}
   slotPrefab: {fileID: 1325566615343944549, guid: d1f1d5e62c35f3245977bcecea0b28aa, type: 3}
-  slotCount: 120
+  slotCount: 15
 --- !u!1 &1874745537
 GameObject:
   m_ObjectHideFlags: 0
