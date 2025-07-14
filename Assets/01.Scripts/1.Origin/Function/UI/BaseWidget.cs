@@ -1,11 +1,33 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using Akasha;
-using UnityEngine;
+﻿using UnityEngine;
 
-public abstract class BaseWidget : MonoBehaviour, IFunctionalSubscriber, IInteractLogicalSubscriber
+namespace Akasha
 {
-    protected virtual void Awake() { OnSetup(); }
-    public virtual void Refresh() { }
-    protected virtual void OnSetup() { }  
+    public abstract class BaseWidget : RxContextBehaviour, IRxUnsafe
+    {
+        protected override void OnInit()
+        {
+            RegisterFields();
+            BindWidget();
+            SetupUIEvents();
+            OnWidgetInitialized();
+        }
+
+        protected virtual void RegisterFields() { }
+
+        protected virtual void BindWidget() { }
+
+        protected virtual void SetupUIEvents() { }
+
+        protected virtual void OnWidgetInitialized() { }
+
+        public abstract void RefreshUI();
+
+        protected override void OnDispose()
+        {
+            base.OnDispose();
+            OnTeardown();
+        }
+
+        protected virtual void OnTeardown() { }
+    }
 }
